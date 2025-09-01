@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Comprehensive Facility Management System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .module-card {
+      transition: all 0.3s ease;
+      border-left: 4px solid transparent;
+    }
+    .module-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    .stat-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+    .sidebar {
+      min-height: 100vh;
+      position: sticky;
+      top: 0;
+    }
+    .content-area {
+      transition: all 0.3s ease;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .role-badge {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 50;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+    .modal-content {
+      background-color: white;
+      margin: 5% auto;
+      padding: 2rem;
+      border-radius: 0.5rem;
+      width: 90%;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .status-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    .status-available { background-color: #dcfce7; color: #166534; }
+    .status-booked { background-color: #fef3c7; color: #92400e; }
+    .status-maintenance { background-color: #fee2e2; color: #991b1b; }
+    .status-active { background-color: #dbeafe; color: #1e40af; }
+    .status-pending { background-color: #f3e8ff; color: #7c3aed; }
+    .status-approved { background-color: #dcfce7; color: #166534; }
+    .status-rejected { background-color: #fee2e2; color: #991b1b; }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 1px;
+      background-color: #e5e7eb;
+    }
+    .calendar-day {
+      background-color: white;
+      min-height: 100px;
+      padding: 0.5rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .calendar-day:hover {
+      background-color: #f3f4f6;
+    }
+    .calendar-day.other-month {
+      background-color: #f9fafb;
+      color: #9ca3af;
+    }
+    .booking-slot {
+      background-color: #dbeafe;
+      color: #1e40af;
+      padding: 0.125rem 0.25rem;
+      border-radius: 0.25rem;
+      font-size: 0.75rem;
+      margin-bottom: 0.125rem;
+      cursor: pointer;
+    }
+    .asset-card {
+      transition: all 0.3s ease;
+      border: 1px solid #e5e7eb;
+    }
+    .asset-card:hover {
+      box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.1);
+    }
+    .parking-slot {
+      width: 60px;
+      height: 40px;
+      border: 2px solid #e5e7eb;
+      border-radius: 0.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .parking-slot.occupied {
+      background-color: #fee2e2;
+      border-color: #dc2626;
+      color: #dc2626;
+    }
+    .parking-slot.available {
+      background-color: #dcfce7;
+      border-color: #16a34a;
+      color: #16a34a;
+    }
+    .parking-slot.reserved {
+      background-color: #fef3c7;
+      border-color: #d97706;
+      color: #d97706;
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <!-- Login Screen -->
+  <div
+    id="login-screen"
+    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 to-purple-800"
+  >
+    <div
+      class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4"
+      role="main"
+      aria-label="Login form"
+    >
+      <div class="text-center mb-8">
+        <div class="w-20 h-20 bg-blue-600 rounded-xl mx-auto mb-4 flex items-center justify-center">
+          <i class="fas fa-building text-white text-2xl"></i>
+        </div>
+        <h1 class="text-3xl font-bold text-gray-800">Facility Management</h1>
+        <p class="text-gray-600 mt-2">Sign in to access your dashboard</p>
+      </div>
+
+      <form id="login-form" class="space-y-6" novalidate>
+        <div>
+          <label
+            for="username"
+            class="block text-sm font-medium text-gray-700"
+            >Username</label
+          >
+          <input
+            type="text"
+            id="username"
+            name="username"
+            autocomplete="username"
+            required
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+          />
+        </div>
+        <div>
+          <label
+            for="password"
+            class="block text-sm font-medium text-gray-700"
+            >Password</label
+          >
+          <input
+            type="password"
+            id="password"
+            name="password"
+            autocomplete="current-password"
+            required
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+          />
+        </div>
+        <div>
+          <button
+            type="submit"
+            id="login-btn"
+            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Sign in
+          </button>
+        </div>
+        <div class="text-sm text-gray-600">
+          <p><strong>Demo Credentials:</strong></p>
+          <p>Admin: admin / admin123</p>
+          <p>User: user / user123</p>
+          <p>Security: security / sec123</p>
+        </div>
+        <p
+          id="login-error"
+          class="text-red-600 text-sm hidden"
+          role="alert"
+          aria-live="assertive"
+        >
+          Invalid username or password.
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard" class="hidden" role="main" aria-label="Dashboard">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center">
+            <div class="w-10 h-10 bg-blue-600 rounded-lg mr-3 flex items-center justify-center">
+              <i class="fas fa-building text-white"></i>
+            </div>
+            <h1 class="text-xl font-semibold text-gray-900">Facility Management</h1>
+          </div>
+          <div class="flex items-center space-x-4">
+            <span
+              id="user-role-badge"
+              class="role-badge bg-blue-100 text-blue-800"
+              aria-label="User role"
+            ></span>
+            <button
+              onclick="logout()"
+              class="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg text-gray-700 text-sm font-medium transition-colors"
+              aria-label="Logout"
+            >
+              <i class="fas fa-sign-out-alt mr-2"></i>Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="flex">
+      <!-- Sidebar -->
+      <aside class="sidebar bg-white w-64 border-r hidden md:block" aria-label="Sidebar navigation">
+        <nav class="p-4">
+          <ul class="space-y-2" id="sidebar-nav">
+            <li>
+              <a
+                href="#dashboard-home"
+                class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors tab-link bg-blue-50 text-blue-600"
+                data-tab="dashboard-home"
+                > <i class="fas fa-home w-6"></i> <span>Dashboard</span> </a
+              >
+            </li>
+            <li id="vms-nav" class="hidden">
+              <a
+                href="#vms"
+                class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors tab-link"
+                data-tab="vms"
+                > <i class="fas fa-user-friends w-6"></i> <span>Visitor Management</span> </a
+              >
+            </li>
+            <li id="bookings-nav" class="hidden">
+              <a
+                href="#bookings"
+                class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors tab-link"
+                data-tab="bookings"
+                > <i class="fas fa-calendar-alt w-6"></i> <span>Room Bookings</span> </a
+              >
+            </li>
+            <li id="assets-nav" class="hidden">
+              <a
+                href="#assets"
+                class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors tab-link"
+                data-tab="assets"
+                > <i class="fas fa-laptop w-6"></i> <span>Asset Tracker</span> </a
+              >
+            </li>
+            <li id="parking-nav" class="hidden">
+              <a
+                href="#parking"
+                class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors tab-link"
+                data-tab="parking"
+                > <i class="fas fa-car w-6"></i> <span>Parking Management</span> </a
+              >
+            </li>
+            <li id="purchase-nav" class="hidden">
+              <a
+                href="#purchase"
+                class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors tab-link"
+                data-tab="purchase"
+                > <i class="fas fa-file-invoice-dollar w-6"></i> <span>Purchase Orders</span> </a
+              >
+            </li>
+            <li id="gatepass-nav" class="hidden">
+              <a
+                href="#gatepass"
+                class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors tab-link"
+                data-tab="gatepass"
+                > <i class="fas fa-key w-6"></i> <span>Gate Pass Tracker</span> </a
+              >
+            </li>
+            <li id="helpdesk-nav" class="hidden">
+              <a
+                href="#helpdesk"
+                class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors tab-link"
+                data-tab="helpdesk"
+                > <i class="fas fa-ticket-alt w-6"></i> <span>Helpdesk</span> </a
+              >
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="content-area flex-1 p-6">
+        <!-- Dashboard Home -->
+        <div id="dashboard-home" class="tab-content active">
+          <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Dashboard Overview</h2>
+            <div class="dashboard-grid mb-8">
+              <div class="stat-card text-white p-6 rounded-xl">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-sm opacity-80">Active Bookings</p>
+                    <p class="text-3xl font-bold" id="active-bookings-count">8</p>
+                  </div>
+                  <i class="fas fa-calendar-alt text-3xl opacity-70"></i>
+                </div>
+              </div>
+              <div class="bg-green-500 text-white p-6 rounded-xl">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-sm opacity-80">Today's Visitors</p>
+                    <p class="text-3xl font-bold" id="visitors-count">12</p>
+                  </div>
+                  <i class="fas fa-user-friends text-3xl opacity-70"></i>
+                </div>
+              </div>
+              <div class="bg-purple-600 text-white p-6 rounded-xl">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-sm opacity-80">Available Assets</p>
+                    <p class="text-3xl font-bold" id="available-assets-count">156</p>
+                  </div>
+                  <i class="fas fa-laptop text-3xl opacity-70"></i>
+                </div>
+              </div>
+              <div class="bg-orange-500 text-white p-6 rounded-xl">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-sm opacity-80">Parking Slots</p>
+                    <p class="text-3xl font-bold" id="parking-available">45/100</p>
+                  </div>
+                  <i class="fas fa-car text-3xl opacity-70"></i>
+                </div>
+              </div>
+            </div>
+
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">Quick Access</h3>
+            <div class="dashboard-grid" id="quick-access-grid">
+              <!-- Modules will be dynamically populated based on role -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Visitor Management System -->
+        <div id="vms" class="tab-content">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">Visitor Management System</h2>
+            <button onclick="openModal('registerVisitorModal')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+              <i class="fas fa-user-plus mr-2"></i>Register Visitor
+            </button>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center cursor-pointer hover:shadow-md transition-shadow" onclick="openModal('registerVisitorModal')">
+              <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-user-plus text-blue-600 text-xl"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Register Visitor</h3>
+              <p class="text-sm text-gray-600">Add new visitor</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center cursor-pointer hover:shadow-md transition-shadow" onclick="openModal('checkinModal')">
+              <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-sign-in-alt text-green-600 text-xl"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Check In</h3>
+              <p class="text-sm text-gray-600">Visitor arrival</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center cursor-pointer hover:shadow-md transition-shadow" onclick="openModal('checkoutModal')">
+              <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-sign-out-alt text-yellow-600 text-xl"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Check Out</h3>
+              <p class="text-sm text-gray-600">Visitor departure</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center cursor-pointer hover:shadow-md transition-shadow" onclick="generateVisitorReport()">
+              <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-chart-bar text-purple-600 text-xl"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Reports</h3>
+              <p class="text-sm text-gray-600">Generate reports</p>
+            </div>
+          </div>
+
+          <!-- Visitors List -->
+          <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+              <h3 class="text-lg font-semibold text-gray-800">Today's Visitors</h3>
+              <div class="flex gap-2">
+                <input type="text" id="visitor-search" placeholder="Search visitors..." class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                <select id="visitor-status-filter" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                  <option value="all">All Status</option>
+                  <option value="checked-in">Checked In</option>
+                  <option value="checked-out">Checked Out</option>
+                  <option value="pending">Pending</option>
+                </select>
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Visitor</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Host</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-in</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200" id="visitorsTable">
+                  <!-- Visitors will be populated here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Room Bookings System -->
+        <div id="bookings" class="tab-content">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">Room Bookings</h2>
+            <button onclick="openModal('bookRoomModal')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+              <i class="fas fa-plus mr-2"></i>Book Room
+            </button>
+          </div>
+
+          <!-- Calendar View -->
+          <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold text-gray-800">Calendar View</h3>
+              <div class="flex items-center gap-4">
+                <button onclick="previousMonth()" class="p-2 hover:bg-gray-100 rounded-lg">
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+                <span id="current-month" class="font-semibold text-lg"></span>
+                <button onclick="nextMonth()" class="p-2 hover:bg-gray-100 rounded-lg">
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            </div>
+            <div class="calendar-grid" id="calendar-grid">
+              <!-- Calendar will be populated here -->
+            </div>
+          </div>
+
+          <!-- Room List -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="bg-white rounded-lg shadow-sm p-6">
+              <div class="flex justify-between items-start mb-4">
+                <div>
+                  <h4 class="font-semibold text-gray-800">Conference Room A</h4>
+                  <p class="text-sm text-gray-600">Capacity: 12 people</p>
+                </div>
+                <span class="status-badge status-available">Available</span>
+              </div>
+              <div class="space-y-2 mb-4">
+                <div class="flex items-center text-sm text-gray-600">
+                  <i class="fas fa-tv mr-2"></i>Projector, TV
+                </div>
+                <div class="flex items-center text-sm text-gray-600">
+                  <i class="fas fa-wifi mr-2"></i>WiFi, Video Conferencing
+                </div>
+              </div>
+              <button onclick="bookRoom('conf-a')" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                Book Now
+              </button>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6">
+              <div class="flex justify-between items-start mb-4">
+                <div>
+                  <h4 class="font-semibold text-gray-800">Meeting Room B</h4>
+                  <p class="text-sm text-gray-600">Capacity: 6 people</p>
+                </div>
+                <span class="status-badge status-booked">Booked</span>
+              </div>
+              <div class="space-y-2 mb-4">
+                <div class="flex items-center text-sm text-gray-600">
+                  <i class="fas fa-tv mr-2"></i>Smart Board
+                </div>
+                <div class="flex items-center text-sm text-gray-600">
+                  <i class="fas fa-wifi mr-2"></i>WiFi
+                </div>
+              </div>
+              <button disabled class="w-full bg-gray-300 text-gray-500 py-2 rounded-lg cursor-not-allowed">
+                Currently Booked
+              </button>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6">
+              <div class="flex justify-between items-start mb-4">
+                <div>
+                  <h4 class="font-semibold text-gray-800">Training Room C</h4>
+                  <p class="text-sm text-gray-600">Capacity: 20 people</p>
+                </div>
+                <span class="status-badge status-available">Available</span>
+              </div>
+              <div class="space-y-2 mb-4">
+                <div class="flex items-center text-sm text-gray-600">
+                  <i class="fas fa-tv mr-2"></i>Projector, Sound System
+                </div>
+                <div class="flex items-center text-sm text-gray-600">
+                  <i class="fas fa-wifi mr-2"></i>WiFi, Whiteboard
+                </div>
+              </div>
+              <button onclick="bookRoom('training-c')" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                Book Now
+              </button>
+            </div>
+          </div>
+
+          <!-- Today's Bookings -->
+          <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h3 class="text-lg font-semibold text-gray-800">Today's Bookings</h3>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organizer</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Purpose</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200" id="bookingsTable">
+                  <!-- Bookings will be populated here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Asset Tracker System -->
+        <div id="assets" class="tab-content">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">Asset Tracker</h2>
+            <button onclick="openModal('addAssetModal')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+              <i class="fas fa-plus mr-2"></i>Add Asset
+            </button>
+          </div>
+
+          <!-- Asset Categories -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+              <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-laptop text-blue-600 text-xl"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Computers</h3>
+              <p class="text-2xl font-bold text-blue-600">45</p>
+              <p class="text-sm text-gray-600">Available: 38</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+              <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-chair text-green-600 text-xl"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Furniture</h3>
+              <p class="text-2xl font-bold text-green-600">120</p>
+              <p class="text-sm text-gray-600">Available: 115</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+              <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-tools text-purple-600 text-xl"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Equipment</h3>
+              <p class="text-2xl font-bold text-purple-600">28</p>
+              <p class="text-sm text-gray-600">Available: 22</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+              <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-mobile-alt text-orange-600 text-xl"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Mobile Devices</h3>
+              <p class="text-2xl font-bold text-orange-600">35</p>
+              <p class="text-sm text-gray-600">Available: 30</p>
+            </div>
+          </div>
+
+          <!-- Asset Search and Filters -->
+          <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+              <div class="flex-1">
+                <input type="text" id="asset-search" placeholder="Search assets by name, ID, or location..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+              </div>
+              <div class="flex gap-2">
+                <select id="asset-category-filter" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                  <option value="all">All Categories</option>
+                  <option value="computers">Computers</option>
+                  <option value="furniture">Furniture</option>
+                  <option value="equipment">Equipment</option>
+                  <option value="mobile">Mobile Devices</option>
+                </select>
+                <select id="asset-status-filter" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                  <option value="all">All Status</option>
+                  <option value="available">Available</option>
+                  <option value="assigned">Assigned</option>
+                  <option value="maintenance">Maintenance</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Assets Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-6" id="assetsGrid">
+            <!-- Assets will be populated here -->
+          </div>
+
+          <!-- Assets Table -->
+          <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h3 class="text-lg font-semibold text-gray-800">Asset Inventory</h3>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asset ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned To</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200" id="assetsTable">
+                  <!-- Assets will be populated here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Parking Management System -->
+        <div id="parking" class="tab-content">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">Parking Management</h2>
+            <button onclick="openModal('allocateParkingModal')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+              <i class="fas fa-plus mr-2"></i>Allocate Parking
+            </button>
+          </div>
+
+          <!-- Parking Statistics -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+              <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-car text-blue-600 text-xl"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Total Slots</h3>
+              <p class="text-2xl font-bold text-blue-600">100</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+              <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-check-circle text-green-600 text-xl"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Available</h3>
+              <p class="text-2xl font-bold text-green-600">45</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+              <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-times-circle text-red-600 text-xl"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Occupied</h3>
+              <p class="text-2xl font-bold text-red-600">50</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+              <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-clock text-yellow-600 text-xl"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Reserved</h3>
+              <p class="text-2xl font-bold text-yellow-600">5</p>
+            </div>
+          </div>
+
+          <!-- Parking Layout -->
+          <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Parking Layout</h3>
+            <div class="grid grid-cols-10 gap-2 mb-4" id="parkingLayout">
+              <!-- Parking slots will be populated here -->
+            </div>
+            <div class="flex items-center gap-6 text-sm">
+              <div class="flex items-center gap-2">
+                <div class="parking-slot available">A</div>
+                <span>Available</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="parking-slot occupied">O</div>
+                <span>Occupied</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="parking-slot reserved">R</div>
+                <span>Reserved</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Vehicle Registration -->
+          <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+              <h3 class="text-lg font-semibold text-gray-800">Registered Vehicles</h3>
+              <button onclick="openModal('registerVehicleModal')" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm">
+                <i class="fas fa-plus mr-2"></i>Register Vehicle
+              </button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vehicle Number</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Slot</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200" id="vehiclesTable">
+                  <!-- Vehicles will be populated here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Purchase Orders System -->
+        <div id="purchase" class="tab-content">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">Purchase Orders & Contracts</h2>
+            <button onclick="openModal('createPOModal')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+              <i class="fas fa-plus mr-2"></i>Create PO
+            </button>
+          </div>
+
+          <!-- PO Statistics -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+              <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-file-invoice-dollar text-blue-600 text-xl"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Total POs</h3>
+              <p class="text-2xl font-bold text-blue-600">156</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+              <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-clock text-yellow-600 text-xl"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Pending</h3>
+              <p class="text-2xl font-bold text-yellow-600">23</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+              <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-check-circle text-green-600 text-xl"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Approved</h3>
+              <p class="text-2xl font-bold text-green-600">120</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+              <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-handshake text-purple-600 text-xl"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Active AMCs</h3>
+              <p class="text-2xl font-bold text-purple-600">15</p>
+            </div>
+          </div>
+
+          <!-- Tabs for PO, Contracts, AMC -->
+          <div class="bg-white rounded-lg shadow-sm mb-6">
+            <div class="border-b border-gray-200">
+              <nav class="flex space-x-8 px-6">
+                <button onclick="switchPurchaseTab('po')" class="purchase-tab-link active py-4 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600">
+                  Purchase Orders
+                </button>
+                <button onclick="switchPurchaseTab('contracts')" class="purchase-tab-link py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
+                  Contracts
+                </button>
+                <button onclick="switchPurchaseTab('amc')" class="purchase-tab-link py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
+                  AMC Tracker
+                </button>
+              </nav>
+            </div>
+
+            <!-- Purchase Orders Tab -->
+            <div id="po-tab" class="purchase-tab-content p-6">
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PO Number</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200" id="poTable">
+                    <!-- POs will be populated here -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Contracts Tab -->
+            <div id="contracts-tab" class="purchase-tab-content p-6 hidden">
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contract ID</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Date</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200" id="contractsTable">
+                    <!-- Contracts will be populated here -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- AMC Tab -->
+            <div id="amc-tab" class="purchase-tab-content p-6 hidden">
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">AMC ID</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Equipment</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Next Service</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expiry</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200" id="amcTable">
+                    <!-- AMCs will be populated here -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gate Pass Tracker System -->
+        <div id="gatepass" class="tab-content">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">Material & Gate Pass Tracker</h2>
+            <button onclick="openModal('createGatePassModal')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+              <i class="fas fa-plus mr-2"></i>Create Gate Pass
+            </button>
+          </div>
+
+          <!-- Gate Pass Statistics -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+              <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-key text-blue-600 text-xl"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Total Passes</h3>
+              <p class="text-2xl font-bold text-blue-600">89</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+              <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-clock text-yellow-600 text-xl"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Pending</h3>
+              <p class="text-2xl font-bold text-yellow-600">12</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+              <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-check-circle text-green-600 text-xl"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Approved</h3>
+              <p class="text-2xl font-bold text-green-600">65</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+              <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-times-circle text-red-600 text-xl"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Rejected</h3>
+              <p class="text-2xl font-bold text-red-600">12</p>
+            </div>
+          </div>
+
+          <!-- Gate Pass List -->
+          <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+              <h3 class="text-lg font-semibold text-gray-800">Gate Pass Records</h3>
+              <div class="flex gap-2">
+                <input type="text" id="gatepass-search" placeholder="Search gate passes..." class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                <select id="gatepass-status-filter" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                  <option value="all">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pass ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Material</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requestor</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200" id="gatepassTable">
+                  <!-- Gate passes will be populated here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Helpdesk System -->
+        <div id="helpdesk" class="tab-content">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">Helpdesk & Ticketing System</h2>
+            <button onclick="openModal('createTicketModal')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+              <i class="fas fa-plus mr-2"></i>Create Ticket
+            </button>
+          </div>
+
+          <!-- Ticket Statistics -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+              <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-ticket-alt text-blue-600 text-xl"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Total Tickets</h3>
+              <p class="text-2xl font-bold text-blue-600">245</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+              <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-clock text-yellow-600 text-xl"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Open</h3>
+              <p class="text-2xl font-bold text-yellow-600">45</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+              <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-tools text-orange-600 text-xl"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">In Progress</h3>
+              <p class="text-2xl font-bold text-orange-600">28</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+              <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-check-circle text-green-600 text-xl"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Resolved</h3>
+              <p class="text-2xl font-bold text-green-600">172</p>
+            </div>
+          </div>
+
+          <!-- Tickets List -->
+          <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+              <h3 class="text-lg font-semibold text-gray-800">Support Tickets</h3>
+              <div class="flex gap-2">
+                <input type="text" id="ticket-search" placeholder="Search tickets..." class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                <select id="ticket-priority-filter" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                  <option value="all">All Priority</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+                <select id="ticket-status-filter" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                  <option value="all">All Status</option>
+                  <option value="open">Open</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="resolved">Resolved</option>
+                </select>
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticket ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requestor</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
