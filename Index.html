@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Facility Management System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  />
+  <style>
+    .module-card {
+      transition: all 0.3s ease;
+      border-left: 4px solid transparent;
+    }
+    .module-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    .stat-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+    .sidebar {
+      min-height: 100vh;
+      position: sticky;
+      top: 0;
+    }
+    .content-area {
+      transition: all 0.3s ease;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .role-badge {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <!-- Login Screen -->
+  <div
+    id="login-screen"
+    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 to-purple-800"
+  >
+    <div
+      class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4"
+      role="main"
+      aria-label="Login form"
+    >
+      <div class="text-center mb-8">
+        <img
+          src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/181b0079-13ff-48af-94ce-c536b952ef03.png"
+          alt="Facility Management System Logo"
+          class="mx-auto mb-4 rounded-xl"
+        />
+        <h1 class="text-3xl font-bold text-gray-800">Facility Management</h1>
+        <p class="text-gray-600 mt-2">Sign in to access your dashboard</p>
+      </div>
+
+      <form id="login-form" class="space-y-6" novalidate>
+        <div>
+          <label
+            for="username"
+            class="block text-sm font-medium text-gray-700"
+            >Username</label
+          >
+          <input
+            type="text"
+            id="username"
+            name="username"
+            autocomplete="username"
+            required
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          />
+        </div>
+        <div>
+          <label
+            for="password"
+            class="block text-sm font-medium text-gray-700"
+            >Password</label
+          >
+          <input
+            type="password"
+            id="password"
+            name="password"
+            autocomplete="current-password"
+            required
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          />
+        </div>
+        <div>
+          <button
+            type="submit"
+            id="login-btn"
+            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Sign in
+          </button>
+        </div>
+        <p
+          id="login-error"
+          class="text-red-600 text-sm hidden"
+          role="alert"
+          aria-live="assertive"
+        >
+          Invalid username or password.
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard" class="hidden" role="main" aria-label="Dashboard">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center">
+            <img
+              src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/46947209-6472-4c78-94b3-7ed855884e53.png"
+              alt="Facility Management System Logo"
+              class="mr-3 rounded"
+            />
+            <h1 class="text-xl font-semibold text-gray-900">Facility Management</h1>
+          </div>
+          <div class="flex items-center space-x-4">
+            <span
+              id="user-role-badge"
+              class="role-badge bg-blue-100 text-blue-800"
+              aria-label="User role"
+            ></span>
+            <button
+              onclick="logout()"
+              class="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg text-gray-700 text-sm font-medium transition-colors"
+              aria-label="Logout"
+            >
+              <i class="fas fa-sign-out-alt mr-2"></i>Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="flex">
+      <!-- Sidebar -->
+      <aside class="sidebar bg-white w-64 border-r hidden md:block" aria-label="Sidebar navigation">
+        <nav class="p-4">
+          <ul class="space-y-2" id="sidebar-nav">
+            <li>
+              <a
+                href="#dashboard-home"
+                class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors tab-link"
+                data-tab="dashboard-home"
+                > <i class="fas fa-home w-6"></i> <span>Dashboard</span> </a
+              >
+            </li>
+            <li id="vms-nav" class="hidden">
+              <a
+                href="#vms"
+                class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors tab-link"
+                data-tab="vms"
+                > <i class="fas fa-user-friends w-6"></i> <span>Visitor Management</span> </a
+              >
+            </li>
+            <li id="helpdesk-nav" class="hidden">
+              <a
+                href="#helpdesk"
+                class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors tab-link"
+                data-tab="helpdesk"
+                > <i class="fas fa-ticket-alt w-6"></i> <span>Helpdesk</span> </a
+              >
+            </li>
+            <li id="booking-nav" class="hidden">
+              <a
+                href="#bookings"
+                class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors tab-link"
+                data-tab="bookings"
+                > <i class="fas fa-calendar-alt w-6"></i> <span>Room Bookings</span> </a
+              >
+            </li>
+            <li id="incident-nav" class="hidden">
+              <a
+                href="#incidents"
+                class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors tab-link"
+                data-tab="incidents"
+                > <i class="fas fa-exclamation-triangle w-6"></i> <span>Incident Reports</span> </a
+              >
+            </li>
+            <li id="gatepass-nav" class="hidden">
+              <a
+                href="#gatepass"
+                class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors tab-link"
+                data-tab="gatepass"
+                > <i class="fas fa-key w-6"></i> <span>Gate Pass Tracker</span> </a
+              >
+            </li>
+            <li id="contact-nav" class="hidden">
+              <a
+                href="#contacts"
+                class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors tab-link"
+                data-tab="contacts"
+                > <i class="fas fa-address-book w-6"></i> <span>Contact Book</span> </a
+              >
+            </li>
+            <li id="workpermit-nav" class="hidden">
+              <a
+                href="#workpermit"
+                class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors tab-link"
+                data-tab="workpermit"
+                > <i class="fas fa-file-contract w-6"></i> <span>Work Permits</span> </a
+              >
+            </li>
+            <li id="asset-nav" class="hidden">
+              <a
+                href="#assets"
+                class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors tab-link"
+                data-tab="assets"
+                > <i class="fas fa-laptop w-6"></i> <span>Asset Tracker</span> </a
+              >
+            </li>
+            <li id="softservices-nav" class="hidden">
+              <a
+                href="#softservices"
+                class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors tab-link"
+                data-tab="softservices"
+                > <i class="fas fa-clipboard-check w-6"></i> <span>Soft Services</span> </a
+              >
+            </li>
+            <li id="purchase-nav" class="hidden">
+              <a
+                href="#purchase"
+                class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors tab-link"
+                data-tab="purchase"
+                > <i class="fas fa-file-invoice-dollar w-6"></i> <span>Purchase Orders</span> </a
+              >
+            </li>
+            <li id="parking-nav" class="hidden">
+              <a
+                href="#parking"
+                class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors tab-link"
+                data-tab="parking"
+                > <i class="fas fa-car w-6"></i> <span>Parking Management</span> </a
+              >
+            </li>
+            <li id="audit-nav" class="hidden">
+              <a
+                href="#audit"
+                class="flex items-center p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors tab-link"
+                data-tab="audit"
+                > <i class="fas fa-chart-bar w-6"></i> <span>Audit Logs</span> </a
+              >
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="content-area flex-1 p-6">
+        <!-- Dashboard Home -->
+        <div id="dashboard-home" class="tab-content active">
+          <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Dashboard Overview</h2>
+            <div class="dashboard-grid mb-8">
+              <div class="stat-card text-white p-6 rounded-xl">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-sm opacity-80">Pending Tickets</p>
+                    <p class="text-3xl font-bold">12</p>
+                  </div>
+                  <i class="fas fa-ticket-alt text-3xl opacity-70"></i>
+                </div>
+              </div>
+              <div class="bg-green-500 text-white p-6 rounded-xl">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-sm opacity-80">Today's Visitors</p>
+                    <p class="text-3xl font-bold">8</p>
+                  </div>
+                  <i class="fas fa-user-friends text-3xl opacity-70"></i>
+                </div>
+              </div>
+              <div class="bg-purple-600 text-white p-6 rounded-xl">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-sm opacity-80">Room Bookings</p>
+                    <p class="text-3xl font-bold">5</p>
+                  </div>
+                  <i class="fas fa-calendar-alt text-3xl opacity-70"></i>
+                </div>
+              </div>
+            </div>
+
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">Quick Access</h3>
+            <div class="dashboard-grid" id="quick-access-grid">
+              <!-- Modules will be dynamically populated based on role -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Module Content Areas -->
+        <div id="vms" class="tab-content">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">Visitor Management System</h2>
+          <div class="bg-white p-6 rounded-lg shadow-sm">
+            <p class="text-gray-600">Visitor management content goes here...</p>
+          </div>
+        </div>
+
+        <div id="helpdesk" class="tab-content">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">Helpdesk & Ticketing System</h2>
+          <div class="bg-white p-6 rounded-lg shadow-sm">
+            <p class="text-gray-600">Helpdesk content goes here...</p>
+          </div>
+        </div>
+
+        <div id="bookings" class="tab-content">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">Conference Room Bookings</h2>
+          <div class="bg-white p-6 rounded-lg shadow-sm">
+            <p class="text-gray-600">Booking content goes here...</p>
+          </div>
+        </div>
+
+        <div id="incidents" class="tab-content">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">Incident Reports</h2>
+          <div class="bg-white p-6 rounded-lg shadow-sm">
+            <p class="text-gray-600">Incident reports content goes here...</p>
+          </div>
+        </div>
+
+        <div id="gatepass" class="tab-content">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">Material & Gate Pass Tracker</h2>
+          <div class="bg-white p-6 rounded-lg shadow-sm">
+            <p class="text-gray-600">Gate pass tracker content goes here...</p>
+          </div>
+        </div>
+
+        <div id="contacts" class="tab-content">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">Contact Book</h2>
+          <div class="bg-white p-6 rounded-lg shadow-sm">
+            <p class="text-gray-600">Contact book content goes here...</p>
+          </div>
+        </div>
+
+        <div id="workpermit" class="tab-content">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">Work Permit</h2>
+          <div class="bg-white p-6 rounded-lg shadow-sm">
+            <p class="text-gray-600">Work permit content goes here...</p>
+          </div>
+        </div>
+
+        <div id="assets" class="tab-content">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">Asset Tracker</h2>
+          <div class="bg-white p-6 rounded-lg shadow-sm">
+            <p class="text-gray-600">Asset tracker content goes here...</p>
+          </div>
+        </div>
+
+        <div id="softservices" class="tab-content">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">Soft Services</h2>
+          <div class="bg-white p-6 rounded-lg shadow-sm">
+            <p class="text-gray-600">Soft services content goes here...</p>
+          </div>
+        </div>
+
+        <div id="purchase" class="tab-content">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">Purchase Orders, Contracts, AMC Tracker</h2>
+          <div class="bg-white p-6 rounded-lg shadow-sm">
+            <p class="text-gray-600">Purchase orders content goes here...</p>
+          </div>
+        </div>
+
+        <div id="parking" class="tab-content">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">Parking Allocation / Vehicle Details</h2>
+          <div class="bg-white p-6 rounded-lg shadow-sm">
+            <p class="text-gray-600">Parking management content goes here...</p>
+          </div>
+        </div>
+
+        <div id="audit" class="tab-content">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">Audit Logs</h2>
+          <div class="bg-white p-6 rounded-lg shadow-sm">
+            <p class="text-gray-600">Audit logs content goes here...</p>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // Default credentials for roles
+    const credentials = {
+      admin: { username: 'admin', password: 'admin123' },
+      technician: { username: 'tech', password: 'tech123' },
+      user: { username: 'user', password: 'user123' },
+      security: { username: 'security', password: 'sec123' }
+    };
+
+    // Role-based module access
+    const roleModules = {
+      admin: ['vms', 'helpdesk', 'bookings', 'incidents', 'gatepass', 'contacts', 'workpermit', 'assets', 'softservices', 'purchase', 'parking', 'audit'],
+      technician: ['helpdesk', 'incidents', 'assets', 'softservices'],
+      user: ['helpdesk', 'bookings', 'incidents', 'contacts', 'parking'],
+      security: ['vms', 'gatepass', 'parking']
+    };
+
+    // Role display names
+    const roleDisplayNames = {
+      admin: 'Administrator',
+      technician: 'Technician',
+      user: 'Employee',
+      security: 'Security/Reception'
+    };
+
+    // Role colors for badges
+    const roleColors = {
+      admin: 'bg-blue-100 text-blue-800',
+      technician: 'bg-green-100 text-green-800',
+      user: 'bg-purple-100 text-purple-800',
+      security: 'bg-orange-100 text-orange-800'
+    };
+
+    let currentRole = null;
+
+    // Initialize the application
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set up login form submission
+      const loginForm = document.getElementById('login-form');
+      loginForm.addEventListener('submit', handleLogin);
+
+      // Set up tab navigation
+      const tabLinks = document.querySelectorAll('.tab-link');
+      tabLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          const tabId = this.getAttribute('data-tab');
+          switchTab(tabId);
+        });
+      });
+    });
+
+    // Handle login form submission
+    function handleLogin(e) {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const errorEl = document.getElementById('login-error');
+
+      // Validate credentials
+      let role = null;
+      for (const [r, creds] of Object.entries(credentials)) {
+        if (creds.username === username && creds.password === password) {
+          role = r;
+          break;
+        }
+      }
+
+      if (role) {
+        errorEl.classList.add('hidden');
+        login(role);
+      } else {
+        errorEl.classList.remove('hidden');
+      }
+    }
+
+    // Login function
+    function login(role) {
+      currentRole = role;
+      
+      // Hide login screen, show dashboard
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('dashboard').classList.remove('hidden');
+      
+      // Update role badge
+      const roleBadge = document.getElementById('user-role-badge');
+      roleBadge.textContent = roleDisplayNames[role];
+      roleBadge.className = `role-badge ${roleColors[role]}`;
+      
+      // Setup role-based navigation
+      setupRoleNavigation(role);
+      
+      // Setup quick access modules
+      setupQuickAccess(role);
+    }
+
+    // Logout function
+    function logout() {
+      currentRole = null;
+      document.getElementById('dashboard').classList.add('hidden');
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('username').value = '';
+      document.getElementById('password').value = '';
+      document.getElementById('login-error').classList.add('hidden');
+    }
+
+    // Setup role-based navigation
+    function setupRoleNavigation(role) {
+      // Hide all navigation items first
+      const navItems = document.querySelectorAll('#sidebar-nav li[id$="-nav"]');
+      navItems.forEach(item => item.classList.add('hidden'));
+      
+      // Show only authorized modules
+      const authorizedModules = roleModules[role];
+      authorizedModules.forEach(module => {
+        const navItem = document.getElementById(`${module}-nav`);
+        if (navItem) {
+          navItem.classList.remove('hidden');
+        }
+      });
+    }
+
+    // Setup quick access modules
+    function setupQuickAccess(role) {
+      const quickAccessGrid = document.getElementById('quick-access-grid');
+      quickAccessGrid.innerHTML = '';
+      
+      const authorizedModules = roleModules[role];
+      
+      const moduleIcons = {
+        vms: 'user-friends',
+        helpdesk: 'ticket-alt',
+        bookings: 'calendar-alt',
+        incidents: 'exclamation-triangle',
+        gatepass: 'key',
+        contacts: 'address-book',
+        workpermit: 'file-contract',
+        assets: 'laptop',
+        softservices: 'clipboard-check',
+        purchase: 'file-invoice-dollar',
+        parking: 'car',
+        audit: 'chart-bar'
+      };
+      
+      const moduleNames = {
+        vms: 'Visitor Management',
+        helpdesk: 'Helpdesk',
+        bookings: 'Room Bookings',
+        incidents: 'Incident Reports',
+        gatepass: 'Gate Pass Tracker',
+        contacts: 'Contact Book',
+        workpermit: 'Work Permits',
+        assets: 'Asset Tracker',
+        softservices: 'Soft Services',
+        purchase: 'Purchase Orders',
+        parking: 'Parking Management',
+        audit: 'Audit Logs'
+      };
+      
+      authorizedModules.forEach(module => {
+        const card = document.createElement('div');
+        card.className = 'module-card bg-white p-6 rounded-lg shadow-sm border-l-4 border-blue-500 cursor-pointer';
+        card.innerHTML = `
+          <div class="flex items-center">
+            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+              <i class="fas fa-${moduleIcons[module]} text-blue-600 text-xl"></i>
+            </div>
+            <div>
+              <h3 class="font-semibold text-gray-800">${moduleNames[module]}</h3>
+              <p class="text-sm text-gray-600">Access ${moduleNames[module]}</p>
+            </div>
+          </div>
+        `;
+        card.addEventListener('click', () => switchTab(module));
+        quickAccessGrid.appendChild(card);
+      });
+    }
+
+    // Switch between tabs
+    function switchTab(tabId) {
+      // Hide all tab contents
+      const tabContents = document.querySelectorAll('.tab-content');
+      tabContents.forEach(tab => tab.classList.remove('active'));
+      
+      // Show selected tab
+      const selectedTab = document.getElementById(tabId);
+      if (selectedTab) {
+        selectedTab.classList.add('active');
+      }
+      
+      // Update active navigation link
+      const navLinks = document.querySelectorAll('.tab-link');
+      navLinks.forEach(link => {
+        if (link.getAttribute('data-tab') === tabId) {
+          link.classList.add('bg-blue-50', 'text-blue-600');
+        } else {
+          link.classList.remove('bg-blue-50', 'text-blue-600');
+        }
+      });
+    }
+  </script>
+</body>
+</html>
+
